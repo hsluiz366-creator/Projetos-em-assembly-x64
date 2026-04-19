@@ -1,13 +1,17 @@
 section .data
 	Dig_Nums db "Digite dois numeros: ", 10
 	len_DN equ $ - Dig_Nums
-	Dig_Op db "Digite uma operação: ", 10
-	len_DO equ $ - Dig_Op
+
+	Dig_OP db "Digite uma operação: ", 10
+	len_DO equ $ - Dig_OP
+
+	Erro_Msg db "Digite um numero ou uma operação valida", 10
+	len_EM equ $ - Erro_Msg
 
 section .bss
-	num1 resb 64
-	num2 resb 64
-	op resb 1
+	num1 resb 2
+	num2 resb 2
+	op resb 2
 
 section .text
 	global _start
@@ -22,18 +26,26 @@ _start:
 	mov rax, 0
 	mov rdi, 0
 	mov rsi, num1
-	mov rdx, 64
+	mov rdx, 2
 	syscall
 
 	mov rax, 0
 	mov rdi, 0
 	mov rsi, num2
-	mov rdx, 64
+	mov rdx, 2
 	syscall
+
+	xor r8, r8
+	mov r8b, [num1]
+	sub r8, '0'
+
+	xor r9, r9
+	mov r9b, [num2]
+	sub r9, '0'
 
 	mov rax, 1
 	mov rdi, 1
-	mov rsi, Dig_Op
+	mov rsi, Dig_OP
 	mov rdx, len_DO
 	syscall
 
@@ -43,40 +55,39 @@ _start:
 	mov rdx, 1
 	syscall
 
-	mov cl, [op]
-	sub cl, '0'
+	mov al, [op]
 
-	mov al, [num1]
-	sub al, '0'
-
-	mov bl, [num2]
-	sub bl, '0'
-
-	cmp cl, 1
+	cmp al, '+'
 	je _soma
 
-	cmp cl, 2
+	cmp al, '-'
 	je _sub
 
-	cmp cl, 3
+	cmp al, '*'
 	je _mul
 
-	cmp cl, 4
+	cmp al, '/'
 	je _div
+
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, Erro_Msg
+	mov rdx, len_EM
+	syscall
 
 	mov rax, 60
 	mov rdi, 0
 	syscall
 
 _soma:
-	add al, bl
-	add al, '0'
-	mov [num1], al
+	lea r10, [r8 + r9]
+	add r10, '0'
+	mov [num1], r10b
 
 	mov rax, 1
 	mov rdi, 1
 	mov rsi, num1
-	mov rdx, 64
+	mov rdx, 2
 	syscall
 
 	mov rax, 60
@@ -84,14 +95,15 @@ _soma:
 	syscall
 
 _sub:
-	sub al, bl
-	add al, '0'
-	mov [num1], al
+	mov r10, r8
+	sub r10, r9
+	add r10, '0'
+	mov [num1], r10b
 
 	mov rax, 1
 	mov rdi, 1
 	mov rsi, num1
-	mov rdx, 64
+	mov rdx, 2
 	syscall
 
 	mov rax, 60
@@ -99,29 +111,34 @@ _sub:
 	syscall
 
 _mul:
-	mul bl
-	add al, '0'
-	mov [num1], al
+	mov r10, r8
+	imul r10, r9
+	add r10, '0'
+	mov [num1], r10b
 
 	mov rax, 1
 	mov rdi, 1
 	mov rsi, num1
-	mov rdx, 64
+	mov rdx, 2
 	syscall
 
 	mov rax, 60
 	mov rdi, 0
 	syscall
+
 _div:
-	xor ah, ah
-	div bl
-	add al, '0'
-	mov [num1], al
+	mov rax, r8
+    	xor rdx, rdx
+    	idiv r9
+    	mov r10, rax
+
+	add r10, '0'
+	mov [num1], r10b
 
 	mov rax, 1
 	mov rdi, 1
 	mov rsi, num1
-	mov rdx, 64
+	mov rdx, 2
 	syscall
 
 	mov rax, 60
